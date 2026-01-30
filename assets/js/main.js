@@ -9,8 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
   window.scrollTo(0, 0);
 
   const body = document.body;
-  const loader = document.querySelector(".page-loader");
-  const loaderBar = document.querySelector(".page-loader__bar");
   const header = document.querySelector(".header");
   const burger = document.querySelector(".header__burger");
   const overlay = document.querySelector(".menu-overlay");
@@ -29,52 +27,72 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Loader timeline
-  gsap.timeline({
-    defaults: { ease: "power2.out" },
-  })
-    .to(loaderBar, { scaleX: 1, duration: 1.2 })
-    .to(loader, { yPercent: -100, duration: 0.9, delay: 0.1 }, "-=0.2")
-    .from(
-      [".header__logo", ".header__nav .nav-link", ".hero__tagline", ".hero__title", ".hero__text", ".hero__actions", ".hero__meta"],
-      {
-        opacity: 0,
-        y: 30,
-        stagger: 0.08,
-        duration: 0.7,
-      },
-      "-=0.4"
-    );
-
-  // Animation des lumières d'ambiance en fond (mouvement plus visible)
-  const orbs = gsap.utils.toArray(".bg-lights__orb");
-  orbs.forEach((orb, index) => {
-    const amplitudeX = index % 2 === 0 ? 140 : -140;
-    const amplitudeY = index === 1 ? 90 : -70;
-
-    gsap.to(orb, {
-      x: amplitudeX,
-      y: amplitudeY,
-      duration: 10 + index * 2,
-      yoyo: true,
-      repeat: -1,
-      ease: "sine.inOut",
-    });
+  // Animation d'entrée simple pour le hero centré et le header
+  gsap.from([
+    ".header__logo",
+    ".header__nav--left .nav-link",
+    ".header__nav--right .nav-link",
+    ".hero__label",
+    ".hero__portrait",
+  ], {
+    opacity: 0,
+    y: 24,
+    stagger: 0.08,
+    duration: 0.7,
+    ease: "power2.out",
   });
 
-  // Sticky header appearance
-  const updateHeader = () => {
-    const scrolled = window.scrollY > 40;
+  // Gestion de l'apparition / disparition du header selon le scroll
+  let lastScrollY = window.scrollY;
+  let headerHidden = false;
+
+  gsap.set(header, { y: 0 });
+
+  const handleScroll = () => {
+    const currentY = window.scrollY;
+    const scrolled = currentY > 40;
     header.classList.toggle("header--scrolled", scrolled);
+
+    const delta = currentY - lastScrollY;
+    const isScrollingDown = delta > 4;
+    const isScrollingUp = delta < -4;
+
+    // Masquer le header quand on descend, seulement après un léger offset
+    if (isScrollingDown && currentY > 120 && !headerHidden && !burger.classList.contains("is-open")) {
+      headerHidden = true;
+      gsap.to(header, {
+        y: -90,
+        duration: 0.35,
+        ease: "power2.out",
+      });
+    }
+
+    // Réafficher le header quand on remonte
+    if (isScrollingUp && headerHidden) {
+      headerHidden = false;
+      gsap.to(header, {
+        y: 0,
+        duration: 0.35,
+        ease: "power2.out",
+      });
+    }
+
+    lastScrollY = currentY;
   };
 
-  window.addEventListener("scroll", updateHeader);
-  updateHeader();
+  window.addEventListener("scroll", handleScroll);
+  handleScroll();
 
   // Mobile menu
   const toggleMenu = () => {
     const isOpen = burger.classList.toggle("is-open");
     body.classList.toggle("no-scroll", isOpen);
+
+    // Si le menu est ouvert, on force le header visible
+    if (isOpen) {
+      headerHidden = false;
+      gsap.to(header, { y: 0, duration: 0.25, ease: "power2.out" });
+    }
 
     gsap.to(overlay, {
       opacity: isOpen ? 1 : 0,
@@ -171,22 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Galerie statique: zoom léger des vignettes
-  const galleryTrack = document.querySelector(".gallery-scroll__track");
-  if (galleryTrack) {
-    gsap.from(".gallery-scroll__item", {
-      scale: 0.9,
-      opacity: 0,
-      duration: 0.9,
-      stagger: 0.1,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: galleryTrack,
-        start: "top 80%",
-      },
-    });
-  }
-
   // Formulaire contact: montée + léger scale
   const contactForm = document.querySelector(".contact-form");
   if (contactForm) {
@@ -203,10 +205,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Subtle parallax on hero image
+  // Effet parallax un peu plus marqué sur l'image du hero
   gsap.to(".hero__img", {
-    scale: 1.08,
-    yPercent: 6,
+    scale: 1.1,
+    yPercent: 10,
     ease: "none",
     scrollTrigger: {
       trigger: ".hero",
@@ -216,7 +218,45 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   });
 
-  // Galerie : on garde uniquement le layout statique pour le moment
+  // Parallax combiné scroll + souris pour les anneaux de fond
+  const rings = gsap.utils.toArray(".bg-ring");
+
+  // Mouvement au scroll : les lignes se rapprochent et se croisent vers le centre
+  const ringsScrollTl = gsap.timeline({
+    scrollTrigger: {
+      trigger: ".hero",
+      start: "top top",
+      end: "bottom+=600 top",
+      scrub: true,
+    },
+  });
+
+  ringsScrollTl
+    .to(".bg-ring--1", { yPercent: -22, xPercent: 14, rotation: -12 }, 0)
+    .to(".bg-ring--2", { yPercent: -10, xPercent: -12, rotation: 10 }, 0)
+    .to(".bg-ring--3", { yPercent: 26, xPercent: 10, rotation: -8 }, 0)
+    .to(".bg-ring--4", { yPercent: 18, xPercent: -8, rotation: 8 }, 0)
+    .to(".bg-ring--5", { yPercent: -18, xPercent: 6, rotation: -6 }, 0)
+    .to(".bg-ring--6", { yPercent: 20, xPercent: -4, rotation: 6 }, 0);
+
+  // Léger parallax à la souris
+  const mouseTweens = rings.map((ring, index) => ({
+    x: gsap.quickTo(ring, "x", { duration: 0.7, ease: "power3.out" }),
+    y: gsap.quickTo(ring, "y", { duration: 0.7, ease: "power3.out" }),
+    strength: 10 + index * 4,
+  }));
+
+  window.addEventListener("mousemove", (event) => {
+    const { innerWidth, innerHeight } = window;
+    const relX = (event.clientX / innerWidth - 0.5) * 2; // -1 à 1
+    const relY = (event.clientY / innerHeight - 0.5) * 2;
+
+    mouseTweens.forEach((tw, index) => {
+      const factor = tw.strength;
+      tw.x(relX * factor);
+      tw.y(relY * factor);
+    });
+  });
 
   // Prevent default submit (placeholder)
   const form = document.querySelector(".contact-form");
@@ -225,5 +265,20 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       alert("Formulaire de démonstration. À connecter à ton back‑end / e‑mail.");
     });
+  }
+
+  // Carrousel automatique avec fade
+  const carouselImages = document.querySelectorAll(".carousel-img");
+  if (carouselImages.length > 1) {
+    let currentIndex = 0;
+    
+    const showNextImage = () => {
+      carouselImages[currentIndex].classList.remove("active");
+      currentIndex = (currentIndex + 1) % carouselImages.length;
+      carouselImages[currentIndex].classList.add("active");
+    };
+    
+    // Change d'image toutes les 4 secondes
+    setInterval(showNextImage, 4000);
   }
 });
