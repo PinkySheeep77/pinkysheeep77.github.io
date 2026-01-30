@@ -103,7 +103,61 @@ main {
   z-index: 1;
 }
 
-/* suppression du loader pour un rendu immédiat et épuré */
+/* Preloader plein écran */
+
+.preloader {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #080810 0, #020203 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.preloader__inner {
+  text-align: center;
+  color: var(--accent);
+  font-family: "Playfair Display", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+}
+
+.preloader__brand {
+  font-size: 0.8rem;
+}
+
+.preloader__orbit {
+  position: relative;
+  width: min(260px, 46vw);
+  aspect-ratio: 1;
+  margin: 2.8rem auto;
+  perspective: 900px;
+}
+
+.preloader__circle {
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  border: 1px solid rgba(224, 193, 143, 0.9);
+  transform-origin: 50% 50%;
+}
+
+.preloader__circle--1 {
+  transform: rotateX(55deg) scaleX(1.05);
+}
+
+.preloader__circle--2 {
+  transform: rotateY(55deg) scaleY(1.05);
+}
+
+.preloader__circle--3 {
+  transform: rotateX(-45deg) rotateZ(35deg) scale(1.02);
+}
+
+.preloader__percent {
+  font-size: 0.75rem;
+}
 
 /* Header */
 
@@ -744,6 +798,14 @@ main {
 @media (max-width: 960px) {
   .header {
     mix-blend-mode: normal;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 6vw;
+  }
+
+  .header__logo {
+    text-align: center;
   }
 
   .header__nav {
@@ -752,6 +814,8 @@ main {
 
   .header__burger {
     display: block;
+    position: absolute;
+    right: 6vw;
   }
 
   .hero {
